@@ -8,7 +8,7 @@ class Person():
         self.sex = sex 
     
     def get_age(self):
-        date_format = "%Y-%m-%d %I:%M%p" #Format für die Eingabe des Geburtsdatums
+        date_format = "%Y-%m-%d " #Format für die Eingabe des Geburtsdatums
         date_of_birth_temp = datetime.strptime(self.__date_of_birth, date_format)
         age = datetime.today().year - date_of_birth_temp.year
         return age
