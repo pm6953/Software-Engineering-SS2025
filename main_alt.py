@@ -11,7 +11,7 @@ if __name__ == "__main__":
     print(" Geben Sie den Nachnamen des Diagnostikers ein:")    
     last_name = ask_name()
 
-    supervisor = build_person(first_name, last_name, None, None)
+    supervisor = build_person(first_name, last_name, None, None, None)
 
     print("Bitte geben Sie die Probandendaten ein:")
     print(" Geben Sie den Vornamen des Probanden ein:")
@@ -20,9 +20,12 @@ if __name__ == "__main__":
     last_name = ask_name()
     print(" Geben Sie das Alter des Probanden ein:")
     age = ask_number()
+    print(" Geben Sie das Geschlecht des Probanden ein:")
     sex = ask_sex()
+    print(" Geben Sie die E-Mail-Adresse des Probanden ein:")
+    email = ask_name()
     # Erstellen einer Person
-    subject = build_person(first_name, last_name, sex, age)
+    subject = build_person(first_name, last_name, sex, age, email)
 
     # Erstellen eines Experiments
     experiment = build_experiment("Leistungstest", "2021-01-01", supervisor, subject)
