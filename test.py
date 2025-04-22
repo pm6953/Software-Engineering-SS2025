@@ -5,7 +5,7 @@ from my_classes import Subject
 def test_workflow():
     # Erstelle ein Subject mit einer ID
     print("Erstelle ein neues Subject...")
-    subject = Subject("Max", "Mustermann")
+    subject = Subject("Max", "Mustermann", None, None, None)
     print(f"Subject erstellt: {subject.first_name} {subject.last_name}, ID: {subject.id}")
 
     # Führe einen PUT-Request aus, um das Subject auf dem Server anzulegen

@@ -15,22 +15,24 @@ def get_persons():
 
 
 # POST (create a new person)
-@app.route('/person/<first_name>/<last_name>', methods=['PUT'])
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route('/person', methods=['PUT'])
 def create_person():
-    record = json.loads(request.data)
-    with open('data.json', 'r') as f:
-        data = f.read()
+    data = request.get_json()
     if not data:
-        records = [record]
-    else:
-        records = json.loads(data)
-        records.append(record)
-    with open('data.json', 'w') as f:
-        f.write(json.dumps(records, indent=2))
-    response = jsonify(record)
-    response.status_code = 201
-    response.headers['Location'] = f"/person/{record['id']}"
-    return response
+        return jsonify({"error": "Keine Daten erhalten"}), 400
+    # Überprüfe, ob alle erforderlichen Felder vorhanden sind
+    required_fields = ["first_name", "last_name", "date_of_birth", "sex", "email"]
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Feld {field} fehlt"}), 400
+    return jsonify({"message": "Person erfolgreich angelegt", "data": data}), 201
+
+if __name__ == "__main__":
+    app.run(debug=True)
 
 # GET a person by id
 @app.route('/person/<id>', methods=['GET'])
