@@ -1,88 +1,95 @@
 #!/usr/bin/env python
 # encoding: utf-8
 import json
-from flask import Flask, request, jsonify
-from flask import render_template
+from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
+
+# Hilfsfunktion: Lade Daten aus der Datei
+def load_data():
+    try:
+        with open('data.json', 'r') as f:
+            data = f.read()
+            return json.loads(data) if data else []
+    except FileNotFoundError:
+        return []
+
+# Hilfsfunktion: Speichere Daten in die Datei
+def save_data(records):
+    with open('data.json', 'w') as f:
+        f.write(json.dumps(records, indent=2))
 
 # GET all persons
-@app.route('/person/', methods=['GET'])
+@app.route('/person', methods=['GET'])
 def get_persons():
-    with open('data.json', 'r') as f:
-        data = f.read()
-        return data
+    records = load_data()
+    return jsonify(records), 200
 
+# GET a person by ID
+@app.route('/person/<id>', methods=['GET'])
+def get_person(id):
+    records = load_data()
+    for record in records:
+        if record['id'] == id:
+            return jsonify(record), 200
+    return jsonify({'error': 'data not found'}), 404
 
 # POST (create a new person)
-from flask import Flask, request, jsonify
-
-app = Flask(__name__)
-
-@app.route('/person', methods=['PUT'])
+@app.route('/person', methods=['POST'])
 def create_person():
     data = request.get_json()
     if not data:
         return jsonify({"error": "Keine Daten erhalten"}), 400
+
     # Überprüfe, ob alle erforderlichen Felder vorhanden sind
-    required_fields = ["first_name", "last_name", "date_of_birth", "sex", "email"]
+    required_fields = ["id", "first_name", "last_name", "date_of_birth", "sex", "email"]
     for field in required_fields:
         if field not in data:
             return jsonify({"error": f"Feld {field} fehlt"}), 400
+
+    records = load_data()
+    # Überprüfe, ob die ID bereits existiert
+    for record in records:
+        if record['id'] == data['id']:
+            return jsonify({"error": "ID existiert bereits"}), 400
+
+    records.append(data)
+    save_data(records)
     return jsonify({"message": "Person erfolgreich angelegt", "data": data}), 201
 
-if __name__ == "__main__":
-    app.run(debug=True)
-
-# GET a person by id
-@app.route('/person/<id>', methods=['GET'])
-def get_person(id):
-
-    with open('data.json', 'r') as f:
-        data = f.read()
-        records = json.loads(data)
-        for record in records:
-            if record['id'] == id:
-                return jsonify(record)
-        return jsonify({'error': 'data not found'})
-    
 # PUT (update a person)
 @app.route('/person/<id>', methods=['PUT'])
-
 def update_person(id):
-    record = json.loads(request.data)
-    with open('data.json', 'r') as f:
-        data = f.read()
-        records = json.loads(data)
-        for i in range(len(records)):
-            if records[i]['id'] == id:
-                records[i] = record
-                with open('data.json', 'w') as f:
-                    f.write(json.dumps(records, indent=2))
-                return jsonify(record)
-        return jsonify({'error': 'data not found'})
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Keine Daten erhalten"}), 400
+
+    records = load_data()
+    for i in range(len(records)):
+        if records[i]['id'] == id:
+            records[i].update(data)
+            save_data(records)
+            return jsonify({"message": "Person erfolgreich aktualisiert", "data": records[i]}), 200
+
+    return jsonify({'error': 'data not found'}), 404
 
 # DELETE a person
 @app.route('/person/<id>', methods=['DELETE'])
-
 def delete_person(id):
+    records = load_data()
+    for i in range(len(records)):
+        if records[i]['id'] == id:
+            record = records.pop(i)
+            save_data(records)
+            record["deleted"] = "True"
+            return jsonify({"message": "Person erfolgreich gelöscht", "data": record}), 200
 
-    with open('data.json', 'r') as f:
-        data = f.read()
-        records = json.loads(data)
-        for i in range(len(records)):
-            if records[i]['id'] == id:
-                record = records.pop(i)
-                with open('data.json', 'w') as f:
-                    f.write(json.dumps(records, indent=2))
-                record["deleted"] = "True"
-                return jsonify(record)
-        return jsonify({'error': 'data not found'})
+    return jsonify({'error': 'data not found'}), 404
 
-
-# GET all persons
+# Landing Page
 @app.route('/', methods=['GET'])
 def landing_page():
     return render_template('index.html')
 
-app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)
